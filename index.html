@@ -1,454 +1,1287 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GastroBot – KI-Chatbot für Restaurants</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GastroBot – Der KI-Assistent für dein Restaurant</title>
+  <meta name="description" content="Der KI-Chatbot der für dein Restaurant arbeitet. 24/7 Reservierungen, Fragen beantworten, Speisekarte erklären. Ein Monat gratis testen, dann 25€/Monat." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
+    /* ─────────────────────────────────────────────────
+       DESIGN TOKENS — DARK THEME v2
+    ───────────────────────────────────────────────── */
     :root {
-      --gold: #c9a96e;
-      --gold-light: #e8cc99;
-      --dark: #0a0804;
-      --dark2: #13100a;
-      --dark3: #1e1810;
-      --text: #d4c4a8;
-      --muted: #7a6a52;
+      --bg:        #0a0907;
+      --bg-2:      #14110c;
+      --bg-3:      #1d1810;
+      --surface:   #1a1612;
+      --line:      rgba(244, 237, 224, 0.08);
+      --line-hi:   rgba(244, 237, 224, 0.16);
+      --text:      #f4ede0;
+      --text-soft: #b0a698;
+      --muted:     #7a6e60;
+      --coral:     #ff5a36;
+      --coral-dk:  #e83e1a;
+      --coral-tint:rgba(255, 90, 54, 0.14);
+      --sun:       #ffcb47;
+      --sun-tint:  rgba(255, 203, 71, 0.14);
+      --shadow:    0 12px 40px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3);
+      --shadow-glow: 0 20px 60px rgba(255, 90, 54, 0.25);
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
-    body { background: var(--dark); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; overflow-x: hidden; }
-    body::before { content: ''; position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E"); opacity: 0.025; pointer-events: none; z-index: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Manrope', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.05;
+      pointer-events: none;
+      z-index: 1;
+      mix-blend-mode: overlay;
+    }
+    ::selection { background: var(--coral); color: white; }
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 32px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* TYPOGRAPHY */
+    h1, h2, h3, h4 {
+      font-family: 'Manrope', sans-serif;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      color: var(--text);
+    }
+    h1.display {
+      font-size: clamp(40px, 6.2vw, 76px);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+    h1.display span.accent { color: var(--coral); }
+    h2 {
+      font-size: clamp(32px, 4vw, 52px);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+    }
+    h2 span.accent { color: var(--coral); }
+    h3 { font-size: 20px; font-weight: 600; }
+    h4 { font-size: 14px; font-weight: 600; }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--coral);
+      padding: 7px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--coral-tint);
+      background: var(--coral-tint);
+      margin-bottom: 28px;
+    }
+    .eyebrow::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--coral);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    /* LOGO */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--text);
+    }
+    .logo-mark {
+      width: 34px;
+      height: 34px;
+      display: block;
+    }
 
     /* NAV */
-    nav { position: fixed; top: 0; left: 0; right: 0; padding: 20px 48px; display: flex; align-items: center; justify-content: space-between; z-index: 100; background: linear-gradient(to bottom, rgba(10,8,4,0.95), transparent); backdrop-filter: blur(8px); }
-    .logo { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--gold); letter-spacing: 1px; }
-    .logo span { font-style: italic; color: var(--gold-light); }
-    .nav-cta { padding: 10px 24px; background: var(--gold); color: #1a0f00; border: none; border-radius: 4px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; }
-    .nav-cta:hover { background: var(--gold-light); transform: translateY(-1px); }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 18px 0;
+      z-index: 100;
+      background: rgba(10, 9, 7, 0.78);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+    .nav-links {
+      display: flex; gap: 36px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .nav-links a {
+      color: var(--text-soft);
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      border-radius: 100px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--coral);
+      color: white;
+      box-shadow: 0 4px 14px rgba(255, 90, 54, 0.3);
+    }
+    .btn-primary:hover {
+      background: var(--coral-dk);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(255, 90, 54, 0.45);
+    }
+    .btn-big { padding: 17px 32px; font-size: 15px; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--line-hi);
+    }
+    .btn-ghost:hover {
+      border-color: var(--text);
+      background: rgba(244, 237, 224, 0.04);
+    }
+    .btn .arrow { display: inline-block; transition: transform 0.2s ease; }
+    .btn:hover .arrow { transform: translateX(3px); }
+
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+    }
 
     /* HERO */
-    .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 120px 24px 80px; position: relative; }
-    .hero-glow { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(201,169,110,0.08) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-    .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border: 1px solid rgba(201,169,110,0.3); border-radius: 20px; font-size: 12px; color: var(--gold); margin-bottom: 32px; animation: fadeUp 0.6s ease both; }
-    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #4caf50; }
-    h1 { font-family: 'Playfair Display', serif; font-size: clamp(42px, 7vw, 80px); line-height: 1.1; color: #f0e4cc; margin-bottom: 24px; animation: fadeUp 0.6s ease 0.1s both; }
-    h1 em { font-style: italic; color: var(--gold); }
-    .hero-sub { font-size: 18px; color: var(--muted); max-width: 520px; margin: 0 auto 48px; line-height: 1.7; animation: fadeUp 0.6s ease 0.2s both; }
-    .hero-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; animation: fadeUp 0.6s ease 0.3s both; }
-    .btn-primary { padding: 16px 36px; background: var(--gold); color: #1a0f00; border: none; border-radius: 4px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s; text-decoration: none; }
-    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(201,169,110,0.3); }
-    .btn-ghost { padding: 16px 36px; background: transparent; color: var(--text); border: 1px solid rgba(201,169,110,0.2); border-radius: 4px; font-family: 'DM Sans', sans-serif; font-size: 15px; cursor: pointer; transition: all 0.2s; text-decoration: none; }
-    .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+    .hero {
+      padding: 170px 0 120px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -100px; right: -250px;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(255, 90, 54, 0.18) 0%, transparent 60%);
+      border-radius: 50%;
+      z-index: 0;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -300px; left: -250px;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(255, 203, 71, 0.10) 0%, transparent 60%);
+      border-radius: 50%;
+      z-index: 0;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 70px;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-text p.lead {
+      font-size: 19px;
+      color: var(--text-soft);
+      margin-top: 28px;
+      max-width: 530px;
+      line-height: 1.6;
+    }
+    .hero-cta {
+      display: flex;
+      gap: 14px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+    .hero-meta {
+      display: flex;
+      gap: 28px;
+      margin-top: 36px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-meta-item svg {
+      width: 16px; height: 16px;
+      color: var(--coral);
+      flex-shrink: 0;
+    }
 
-    /* STATS */
-    .stats { display: flex; justify-content: center; gap: 64px; flex-wrap: wrap; padding: 48px 24px; border-top: 1px solid rgba(201,169,110,0.08); border-bottom: 1px solid rgba(201,169,110,0.08); }
-    .stat { text-align: center; }
-    .stat-num { font-family: 'Playfair Display', serif; font-size: 40px; color: var(--gold); line-height: 1; }
-    .stat-label { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    .chat-preview {
+      background: var(--bg-3);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      position: relative;
+      transform: rotate(-1.5deg);
+      transition: transform 0.4s ease;
+    }
+    .chat-preview:hover {
+      transform: rotate(0deg) translateY(-4px);
+    }
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+    .chat-avatar {
+      width: 42px; height: 42px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .chat-avatar svg { width: 28px; height: 28px; }
+    .chat-title { font-size: 15px; font-weight: 600; }
+    .chat-status {
+      font-size: 12px;
+      color: var(--text-soft);
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 2px;
+    }
+    .chat-status::before {
+      content: '';
+      width: 7px; height: 7px;
+      background: #4ade80;
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+    }
+    .chat-msg {
+      max-width: 80%;
+      padding: 11px 15px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      margin-bottom: 8px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards;
+    }
+    .chat-msg.user {
+      background: var(--coral);
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+      animation-delay: 0.2s;
+    }
+    .chat-msg.bot {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+    .chat-msg.bot.d1 { animation-delay: 0.7s; }
+    .chat-msg.user.d2 { animation-delay: 1.6s; }
+    .chat-msg.bot.d3 { animation-delay: 2.4s; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .chat-typing {
+      display: inline-flex;
+      gap: 4px;
+      padding: 8px 0;
+    }
+    .chat-typing span {
+      width: 7px; height: 7px;
+      background: var(--coral);
+      border-radius: 50%;
+      animation: typing 1.4s ease-in-out infinite;
+    }
+    .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+      30% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    .float-tag {
+      position: absolute;
+      background: var(--bg-3);
+      border: 1px solid var(--line-hi);
+      padding: 9px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: var(--shadow);
+    }
+    .float-tag svg { width: 14px; height: 14px; }
+    .float-tag-1 {
+      top: -16px; right: -12px;
+      color: var(--coral);
+      transform: rotate(6deg);
+      animation: float1 4s ease-in-out infinite;
+    }
+    .float-tag-2 {
+      bottom: -18px; left: -16px;
+      color: #4ade80;
+      transform: rotate(-4deg);
+      animation: float2 4.5s ease-in-out infinite;
+    }
+    @keyframes float1 {
+      0%, 100% { transform: rotate(6deg) translateY(0); }
+      50% { transform: rotate(6deg) translateY(-8px); }
+    }
+    @keyframes float2 {
+      0%, 100% { transform: rotate(-4deg) translateY(0); }
+      50% { transform: rotate(-4deg) translateY(-8px); }
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero { padding: 140px 0 80px; }
+    }
 
     /* SECTIONS */
-    section { padding: 100px 24px; max-width: 1100px; margin: 0 auto; }
-    .section-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
-    h2 { font-family: 'Playfair Display', serif; font-size: clamp(32px, 4vw, 52px); color: #f0e4cc; line-height: 1.2; margin-bottom: 20px; }
-    h2 em { font-style: italic; color: var(--gold); }
-    .section-desc { font-size: 16px; color: var(--muted); max-width: 480px; line-height: 1.8; }
+    section { padding: 110px 0; position: relative; }
+    .section-head {
+      max-width: 720px;
+      margin: 0 auto 64px;
+      text-align: center;
+    }
+    .section-head p {
+      font-size: 18px;
+      color: var(--text-soft);
+      margin-top: 20px;
+    }
 
     /* HOW IT WORKS */
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 2px; margin-top: 64px; border: 1px solid rgba(201,169,110,0.1); border-radius: 12px; overflow: hidden; }
-    .step { padding: 40px 32px; background: var(--dark2); transition: background 0.3s; }
-    .step:hover { background: var(--dark3); }
-    .step-num { font-family: 'Playfair Display', serif; font-size: 48px; color: rgba(201,169,110,0.15); line-height: 1; margin-bottom: 20px; }
-    .step-title { font-size: 18px; color: #f0e4cc; margin-bottom: 10px; font-weight: 500; }
-    .step-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+    .step {
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      padding: 32px;
+      border-radius: 18px;
+      transition: all 0.3s ease;
+    }
+    .step:hover {
+      border-color: var(--line-hi);
+      transform: translateY(-4px);
+    }
+    .step-num {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--coral);
+      letter-spacing: 0.16em;
+      margin-bottom: 18px;
+      text-transform: uppercase;
+    }
+    .step h3 { margin-bottom: 10px; }
+    .step p {
+      color: var(--text-soft);
+      font-size: 15px;
+    }
+    @media (max-width: 768px) {
+      .steps { grid-template-columns: 1fr; }
+    }
 
     /* FEATURES */
-    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 64px; }
-    .feature-card { padding: 36px; background: var(--dark2); border: 1px solid rgba(201,169,110,0.08); border-radius: 12px; transition: all 0.3s; }
-    .feature-card:hover { border-color: rgba(201,169,110,0.2); transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
-    .feature-icon { font-size: 28px; margin-bottom: 20px; }
-    .feature-title { font-size: 17px; color: #f0e4cc; margin-bottom: 10px; font-weight: 500; }
-    .feature-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+    .feature {
+      padding: 30px;
+      border-radius: 18px;
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      transition: all 0.3s ease;
+    }
+    .feature:hover {
+      transform: translateY(-4px);
+      border-color: var(--coral);
+      background: var(--bg-3);
+    }
+    .feature-icon {
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      background: var(--coral-tint);
+      color: var(--coral);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 22px;
+    }
+    .feature-icon svg { width: 22px; height: 22px; }
+    .feature h3 { margin-bottom: 10px; }
+    .feature p { color: var(--text-soft); font-size: 15px; }
 
-    /* PRICING */
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 64px; align-items: start; }
-    .price-card { padding: 40px 36px; background: var(--dark2); border: 1px solid rgba(201,169,110,0.1); border-radius: 12px; position: relative; }
-    .price-card.featured { border-color: var(--gold); background: linear-gradient(160deg, #1e1810, #13100a); box-shadow: 0 0 60px rgba(201,169,110,0.1); }
-    .price-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); padding: 4px 16px; background: var(--gold); color: #1a0f00; font-size: 11px; font-weight: 500; border-radius: 20px; white-space: nowrap; }
-    .price-name { font-size: 14px; color: var(--muted); margin-bottom: 16px; letter-spacing: 1px; text-transform: uppercase; }
-    .price-amount { font-family: 'Playfair Display', serif; font-size: 52px; color: #f0e4cc; line-height: 1; }
-    .price-amount span { font-size: 18px; color: var(--muted); }
-    .price-period { font-size: 13px; color: var(--muted); margin-top: 6px; margin-bottom: 32px; }
-    .price-features { list-style: none; display: flex; flex-direction: column; gap: 14px; margin-bottom: 36px; }
-    .price-features li { font-size: 14px; color: var(--text); display: flex; gap: 10px; align-items: flex-start; }
-    .price-features li::before { content: '✓'; color: var(--gold); flex-shrink: 0; }
-    .price-btn { width: 100%; padding: 14px; background: transparent; border: 1px solid rgba(201,169,110,0.3); border-radius: 4px; color: var(--gold); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-    .price-btn:hover { background: rgba(201,169,110,0.1); border-color: var(--gold); }
-    .price-btn.featured-btn { background: var(--gold); color: #1a0f00; border-color: var(--gold); }
-    .price-btn.featured-btn:hover { background: var(--gold-light); }
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
+    /* PRICING — single card */
+    .pricing-wrap {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .price-card {
+      background: var(--bg-2);
+      border: 1px solid var(--line-hi);
+      border-radius: 24px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: var(--shadow);
+    }
+    .price-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(255, 90, 54, 0.12), transparent 50%);
+      pointer-events: none;
+    }
+    .price-banner {
+      background: var(--coral);
+      color: white;
+      text-align: center;
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 2;
+    }
+    .price-inner {
+      padding: 44px 44px 40px;
+      position: relative;
+      z-index: 2;
+    }
+    .price-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--coral);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin-bottom: 12px;
+    }
+    .price-tagline {
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 28px;
+      line-height: 1.3;
+      letter-spacing: -0.015em;
+    }
+    .price-figure {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .price-num {
+      font-size: 72px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      color: var(--text);
+    }
+    .price-currency {
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .price-period {
+      font-size: 16px;
+      color: var(--text-soft);
+    }
+    .price-trial {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 32px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--line);
+    }
+    .feature-list {
+      list-style: none;
+      margin-bottom: 36px;
+    }
+    .feature-list li {
+      font-size: 15px;
+      padding: 9px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      color: var(--text);
+    }
+    .feature-list svg {
+      flex-shrink: 0;
+      width: 18px; height: 18px;
+      color: var(--coral);
+      margin-top: 3px;
+    }
+    .price-card .btn {
+      width: 100%;
+      justify-content: center;
+      padding: 17px;
+      font-size: 15px;
+    }
+    .price-note {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    @media (max-width: 600px) {
+      .price-inner { padding: 32px 24px; }
+      .price-num { font-size: 56px; }
+    }
 
     /* FAQ */
-    .faq-list { margin-top: 64px; display: flex; flex-direction: column; gap: 2px; }
-    .faq-item { background: var(--dark2); border: 1px solid rgba(201,169,110,0.08); border-radius: 8px; overflow: hidden; }
-    .faq-q { padding: 24px 28px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: #f0e4cc; transition: color 0.2s; }
-    .faq-q:hover { color: var(--gold); }
-    .faq-icon { color: var(--gold); font-size: 20px; transition: transform 0.3s; flex-shrink: 0; }
-    .faq-a { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; font-size: 14px; color: var(--muted); line-height: 1.8; padding: 0 28px; }
-    .faq-item.open .faq-a { max-height: 200px; padding: 0 28px 24px; }
-    .faq-item.open .faq-icon { transform: rotate(45deg); }
+    .faq-list { max-width: 760px; margin: 0 auto; }
+    .faq-item {
+      border-bottom: 1px solid var(--line);
+      padding: 22px 0;
+    }
+    .faq-item summary {
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      color: var(--text);
+    }
+    .faq-item summary::-webkit-details-marker { display: none; }
+    .faq-item summary::after {
+      content: '';
+      width: 14px; height: 14px;
+      flex-shrink: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ff5a36' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E");
+      background-size: contain;
+      background-repeat: no-repeat;
+      transition: transform 0.3s ease;
+    }
+    .faq-item[open] summary::after { transform: rotate(45deg); }
+    .faq-item p {
+      margin-top: 14px;
+      color: var(--text-soft);
+      font-size: 15.5px;
+      line-height: 1.65;
+      max-width: 92%;
+    }
 
-    /* CTA */
-    .cta-section { text-align: center; padding: 100px 24px; position: relative; }
-    .cta-glow { position: absolute; width: 500px; height: 300px; background: radial-gradient(ellipse, rgba(201,169,110,0.06) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; }
-    .cta-section h2 { margin-bottom: 16px; }
-    .cta-section p { color: var(--muted); margin-bottom: 40px; font-size: 16px; }
+    /* FINAL CTA */
+    .final-cta {
+      padding: 110px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .final-cta-card {
+      background: linear-gradient(135deg, var(--coral) 0%, #c92e0a 100%);
+      border-radius: 32px;
+      padding: 80px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-glow);
+    }
+    .final-cta-card::before {
+      content: '';
+      position: absolute;
+      top: -200px; right: -200px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(255, 203, 71, 0.35) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .final-cta-card::after {
+      content: '';
+      position: absolute;
+      bottom: -150px; left: -150px;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .final-cta-card h2 {
+      color: white;
+      max-width: 720px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+    .final-cta-card p {
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 18px;
+      margin: 22px auto 36px;
+      max-width: 540px;
+      position: relative;
+      z-index: 2;
+    }
+    .final-cta-card .btn {
+      position: relative;
+      z-index: 2;
+    }
+    .btn-cream {
+      background: var(--text);
+      color: var(--bg);
+    }
+    .btn-cream:hover {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    }
+    @media (max-width: 700px) {
+      .final-cta-card { padding: 60px 30px; border-radius: 24px; }
+    }
 
     /* FOOTER */
-    footer { padding: 40px 48px; border-top: 1px solid rgba(201,169,110,0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
-    .footer-logo { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 18px; }
-    .footer-text { font-size: 13px; color: var(--muted); }
+    footer {
+      background: var(--bg);
+      color: var(--muted);
+      padding: 70px 0 32px;
+      border-top: 1px solid var(--line);
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 50px;
+      margin-bottom: 56px;
+    }
+    .footer-brand .logo { margin-bottom: 18px; }
+    .footer-brand p {
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 320px;
+      color: var(--text-soft);
+    }
+    .footer h4 {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 18px;
+    }
+    .footer ul { list-style: none; }
+    .footer ul li { padding: 7px 0; font-size: 14px; }
+    .footer ul a { color: var(--text-soft); transition: color 0.2s; }
+    .footer ul a:hover { color: var(--coral); }
+    .footer-bottom {
+      padding-top: 30px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 13px;
+    }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
+    }
 
-    /* ANIMATIONS */
-    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-    .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
+    /* CHAT WIDGET */
+    .chat-bubble {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      width: 60px; height: 60px;
+      background: var(--coral);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 26px rgba(255, 90, 54, 0.5);
+      z-index: 999;
+      transition: transform 0.25s ease, background 0.2s ease;
+      color: white;
+      border: none;
+    }
+    .chat-bubble svg { width: 26px; height: 26px; }
+    .chat-bubble:hover { transform: scale(1.08); background: var(--coral-dk); }
+    .chat-bubble.hidden { display: none; }
 
-    /* DEMO */
-    .demo-wrapper { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-    @media (max-width: 768px) { .demo-wrapper { grid-template-columns: 1fr; } nav { padding: 16px 24px; } .stats { gap: 32px; } footer { flex-direction: column; text-align: center; } }
-    .demo-chat { background: var(--dark2); border: 1px solid rgba(201,169,110,0.15); border-radius: 16px; overflow: hidden; box-shadow: 0 32px 80px rgba(0,0,0,0.5); }
-    .demo-header { padding: 16px 20px; background: var(--dark3); border-bottom: 1px solid rgba(201,169,110,0.1); display: flex; align-items: center; gap: 12px; }
-    .demo-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #8b6914); display: flex; align-items: center; justify-content: center; font-size: 16px; }
-    .demo-name { font-size: 14px; color: #f0e4cc; }
-    .demo-online { font-size: 11px; color: #4caf50; }
-
-    /* LIVE CHAT WIDGET */
-    .chat-bubble-btn { position: fixed; bottom: 28px; right: 28px; width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #8b6914); border: none; cursor: pointer; font-size: 26px; box-shadow: 0 8px 32px rgba(201,169,110,0.4); z-index: 999; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
-    .chat-bubble-btn:hover { transform: scale(1.1); }
-    .chat-window { position: fixed; bottom: 100px; right: 28px; width: 360px; height: 520px; background: linear-gradient(160deg, #1a1208, #120d05); border: 1px solid rgba(201,169,110,0.2); border-radius: 20px; box-shadow: 0 32px 80px rgba(0,0,0,0.7); z-index: 998; display: flex; flex-direction: column; overflow: hidden; transition: all 0.3s; transform-origin: bottom right; }
-    .chat-window.hidden { opacity: 0; transform: scale(0.8); pointer-events: none; }
-    .chat-header { padding: 16px 20px; background: linear-gradient(135deg, #1e1508, #2a1a08); border-bottom: 1px solid rgba(201,169,110,0.1); display: flex; align-items: center; gap: 12px; }
-    .chat-avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #8b6914); display: flex; align-items: center; justify-content: center; font-size: 18px; box-shadow: 0 4px 12px rgba(201,169,110,0.3); }
-    .chat-title { font-size: 14px; color: #f0e4cc; font-weight: 500; }
-    .chat-status { font-size: 11px; color: #4caf50; display: flex; align-items: center; gap: 4px; }
-    .chat-status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #4caf50; display: inline-block; }
-    .close-btn { margin-left: auto; background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 4px; line-height: 1; }
-    .close-btn:hover { color: var(--gold); }
-    .chat-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: thin; scrollbar-color: #3a2a12 transparent; }
-    .msg-row { display: flex; align-items: flex-end; gap: 6px; animation: fadeUp 0.3s ease; }
-    .msg-row.user { justify-content: flex-end; }
-    .msg-av { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), #8b6914); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
-    .bubble { max-width: 80%; padding: 9px 13px; font-family: sans-serif; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
-    .bubble.bot { background: rgba(255,255,255,0.06); border: 1px solid rgba(201,169,110,0.12); border-radius: 14px 14px 14px 4px; color: var(--text); }
-    .bubble.user { background: linear-gradient(135deg, var(--gold), #a07828); border-radius: 14px 14px 4px 14px; color: #1a0f00; }
-    .typing-dots { display: flex; gap: 4px; padding: 10px 13px; }
-    .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); opacity: 0.7; animation: bounce 1.2s ease-in-out infinite; }
-    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-    .suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 8px; }
-    .sug-btn { padding: 5px 11px; background: transparent; border: 1px solid rgba(201,169,110,0.25); border-radius: 16px; color: var(--gold); font-size: 11px; font-family: sans-serif; cursor: pointer; transition: all 0.2s; }
-    .sug-btn:hover { background: rgba(201,169,110,0.1); border-color: var(--gold); }
-    .chat-input-area { padding: 12px 14px; border-top: 1px solid rgba(201,169,110,0.1); background: rgba(0,0,0,0.2); display: flex; gap: 8px; align-items: flex-end; }
-    .chat-input { flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(201,169,110,0.15); border-radius: 10px; padding: 9px 12px; color: var(--text); font-size: 13px; font-family: sans-serif; outline: none; resize: none; line-height: 1.5; transition: border-color 0.2s; }
-    .chat-input:focus { border-color: rgba(201,169,110,0.4); }
-    .chat-input::placeholder { color: #5a4535; }
-    .send-btn { width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all 0.2s; flex-shrink: 0; }
-    .send-btn.active { background: linear-gradient(135deg, var(--gold), #8b6914); box-shadow: 0 4px 12px rgba(201,169,110,0.3); }
-    .send-btn.inactive { background: rgba(255,255,255,0.05); cursor: not-allowed; color: var(--muted); }
-    @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
+    .chat-window {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      width: 380px;
+      max-width: calc(100vw - 32px);
+      height: 560px;
+      max-height: calc(100vh - 48px);
+      background: var(--bg-2);
+      border: 1px solid var(--line-hi);
+      border-radius: 20px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      z-index: 999;
+      overflow: hidden;
+      transform: translateY(20px) scale(0.95);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+    }
+    .chat-window.open {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .chat-window-header {
+      background: var(--bg-3);
+      border-bottom: 1px solid var(--line);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .chat-window-header .chat-title { color: var(--text); }
+    .chat-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--text-soft);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      transition: color 0.2s;
+    }
+    .chat-close:hover { color: var(--text); }
+    .chat-close svg { width: 18px; height: 18px; }
+    .chat-body {
+      flex: 1;
+      padding: 18px;
+      overflow-y: auto;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .chat-body .chat-msg { animation: none; opacity: 1; max-width: 86%; }
+    .chat-input-area {
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      background: var(--bg-2);
+      display: flex;
+      gap: 8px;
+    }
+    .chat-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 100px;
+      font-family: 'Manrope', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .chat-input::placeholder { color: var(--muted); }
+    .chat-input:focus { border-color: var(--coral); }
+    .chat-send {
+      width: 42px; height: 42px;
+      background: var(--coral);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .chat-send:hover { background: var(--coral-dk); }
+    .chat-send:disabled { background: var(--muted); cursor: not-allowed; }
+    .chat-send svg { width: 18px; height: 18px; }
   </style>
 </head>
 <body>
 
+<!-- REUSABLE SVG ICONS -->
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <!-- LOGO: chef-hat robot -->
+    <symbol id="gb-logo" viewBox="0 0 48 48">
+      <!-- Chef hat: tall white toque -->
+      <rect x="15" y="6" width="18" height="12" fill="#ffffff"/>
+      <rect x="12" y="7" width="24" height="3" fill="#ffffff"/>
+      <path d="M 12 7.5 A 12 5.5 0 0 1 36 7.5 Z" fill="#ffffff"/>
+      <rect x="13" y="17" width="22" height="3.4" rx="0.5" fill="#1d1810"/>
+      <rect x="12" y="20" width="24" height="20" rx="5" fill="#ff5a36"/>
+      <rect x="10" y="26" width="2" height="6" rx="1" fill="#ff5a36"/>
+      <rect x="36" y="26" width="2" height="6" rx="1" fill="#ff5a36"/>
+      <circle cx="19" cy="28" r="2" fill="#1d1810"/>
+      <circle cx="29" cy="28" r="2" fill="#1d1810"/>
+      <!-- Slight smile -->
+      <path d="M 19.5 33 A 5 1.5 0 0 0 28.5 33" stroke="#1d1810" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+    </symbol>
+
+    <symbol id="i-check" viewBox="0 0 24 24">
+      <path d="M20 6L9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24">
+      <rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-utensils" viewBox="0 0 24 24">
+      <path d="M3 3v6a2 2 0 002 2h0v10M7 3v6M5 3v6M16 3c-1.5 0-3 2-3 5s1.5 5 3 5h1v8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    </symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24">
+      <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24">
+      <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24">
+      <path d="M21 12c0 4.4-4 8-9 8-1.4 0-2.7-.3-3.9-.8L3 21l1.6-4.4A8 8 0 013 12c0-4.4 4-8 9-8s9 3.6 9 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="i-close" viewBox="0 0 24 24">
+      <path d="M18 6L6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="i-send" viewBox="0 0 24 24">
+      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
 <!-- NAV -->
 <nav>
-  <div class="logo">Gastro<span>Bot</span></div>
-  <a href="#pricing" class="nav-cta">Jetzt starten</a>
+  <div class="nav-inner">
+    <div class="logo">
+      <svg class="logo-mark"><use href="#gb-logo"/></svg>
+      GastroBot
+    </div>
+    <div class="nav-links">
+      <a href="#features">Funktionen</a>
+      <a href="#how">So funktioniert's</a>
+      <a href="#pricing">Preise</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a href="#pricing" class="btn btn-primary">Gratis testen</a>
+  </div>
 </nav>
 
 <!-- HERO -->
-<div class="hero">
-  <div class="hero-glow"></div>
-  <div style="position:relative;z-index:1;">
-    <div class="hero-badge"><div class="badge-dot"></div>KI-Assistent für Gastronomie</div>
-    <h1>Dein Restaurant<br/>antwortet <em>immer.</em></h1>
-    <p class="hero-sub">GastroBot beantwortet Fragen, nimmt Reservierungen entgegen und bestätigt automatisch per E-Mail – rund um die Uhr, auf Ihrer Website.</p>
-    <div class="hero-buttons">
-      <a href="#pricing" class="btn-primary">14 Tage kostenlos testen</a>
-      <a href="#demo" class="btn-ghost">Demo ausprobieren ↓</a>
+<header class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-text">
+        <span class="eyebrow">KI für die Gastronomie</span>
+        <h1 class="display">Dein Restaurant hat jetzt einen <span class="accent">Mitarbeiter</span> der nie schläft.</h1>
+        <p class="lead">
+          GastroBot beantwortet automatisch Fragen deiner Gäste, nimmt Reservierungen entgegen und erklärt die Speisekarte – 24 Stunden am Tag, 7 Tage die Woche.
+        </p>
+        <div class="hero-cta">
+          <a href="#pricing" class="btn btn-primary btn-big">Einen Monat gratis testen <span class="arrow">→</span></a>
+          <a href="#how" class="btn btn-ghost btn-big">So funktioniert's</a>
+        </div>
+        <div class="hero-meta">
+          <div class="hero-meta-item">
+            <svg><use href="#i-check"/></svg>
+            Keine Einrichtungsgebühr
+          </div>
+          <div class="hero-meta-item">
+            <svg><use href="#i-check"/></svg>
+            Monatlich kündbar
+          </div>
+          <div class="hero-meta-item">
+            <svg><use href="#i-check"/></svg>
+            DSGVO-konform
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-preview">
+        <div class="float-tag float-tag-1">
+          <svg><use href="#i-bolt"/></svg> Live-Demo
+        </div>
+        <div class="float-tag float-tag-2">
+          <svg><use href="#i-check"/></svg> Reservierung bestätigt
+        </div>
+        <div class="chat-header">
+          <div class="chat-avatar">
+            <svg><use href="#gb-logo"/></svg>
+          </div>
+          <div>
+            <div class="chat-title">GastroBot</div>
+            <div class="chat-status">Online · antwortet sofort</div>
+          </div>
+        </div>
+        <div class="chat-msg user d2">Habt ihr heute Abend noch einen Tisch für 4 Personen?</div>
+        <div class="chat-msg bot d3">Ja, gerne. Um 19:30 oder 20:00 Uhr ist noch ein Tisch frei. Welche Zeit passt euch besser?</div>
+        <div class="chat-msg user d2" style="animation-delay: 3.2s;">20:00 wäre perfekt.</div>
+        <div class="chat-msg bot d3" style="animation-delay: 4s;">
+          Wunderbar. Auf welchen Namen darf ich die Reservierung anlegen?
+        </div>
+      </div>
     </div>
   </div>
-</div>
-
-<!-- STATS -->
-<div class="stats reveal">
-  <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">Erreichbar für Ihre Gäste</div></div>
-  <div class="stat"><div class="stat-num">2 min</div><div class="stat-label">Einrichtungszeit</div></div>
-  <div class="stat"><div class="stat-num">−80%</div><div class="stat-label">Weniger Routine-Anrufe</div></div>
-  <div class="stat"><div class="stat-num">DE/EN</div><div class="stat-label">Mehrsprachig</div></div>
-</div>
+</header>
 
 <!-- HOW IT WORKS -->
-<section class="reveal">
-  <div class="section-label">So funktioniert es</div>
-  <h2>In 3 Schritten<br/><em>live gehen</em></h2>
-  <p class="section-desc">Kein technisches Wissen nötig. Sie tragen Ihre Daten ein – wir kümmern uns um den Rest.</p>
-  <div class="steps">
-    <div class="step"><div class="step-num">01</div><div class="step-title">Registrieren & einrichten</div><div class="step-desc">Tragen Sie Öffnungszeiten, Speisekarte und Adresse in unser Dashboard ein. Dauert 2 Minuten.</div></div>
-    <div class="step"><div class="step-num">02</div><div class="step-title">Bot anpassen</div><div class="step-desc">Wählen Sie Name, Farbe und Sprache Ihres Bots. Er passt sich Ihrer Marke an.</div></div>
-    <div class="step"><div class="step-num">03</div><div class="step-title">Code einbinden</div><div class="step-desc">Einen einzigen Code-Schnipsel auf Ihrer Website einfügen – fertig. Ihr Bot ist live.</div></div>
-  </div>
-</section>
-
-<!-- DEMO -->
-<section id="demo" class="reveal">
-  <div class="demo-wrapper">
-    <div>
-      <div class="section-label">Live Demo</div>
-      <h2>Probieren Sie es<br/><em>selbst aus</em></h2>
-      <p class="section-desc" style="margin-bottom:24px;">Der Bot unten rechts ist ein echter KI-Assistent – klicken Sie auf das Chat-Symbol und stellen Sie eine Frage oder reservieren Sie einen Tisch!</p>
-      <ul style="list-style:none;display:flex;flex-direction:column;gap:12px;color:var(--muted);font-size:14px;">
-        <li style="display:flex;gap:10px;"><span style="color:var(--gold)">✓</span> Beantwortet Fragen sofort</li>
-        <li style="display:flex;gap:10px;"><span style="color:var(--gold)">✓</span> Nimmt Reservierungen entgegen</li>
-        <li style="display:flex;gap:10px;"><span style="color:var(--gold)">✓</span> Sendet Bestätigungs-E-Mails</li>
-        <li style="display:flex;gap:10px;"><span style="color:var(--gold)">✓</span> Deutsch & Englisch automatisch</li>
-      </ul>
+<section id="how">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">In 3 Schritten live</span>
+      <h2>So schnell ist dein Bot <span class="accent">einsatzbereit</span>.</h2>
+      <p>Keine technischen Kenntnisse nötig. Du füllst ein Formular aus – wir erledigen den Rest.</p>
     </div>
-    <div style="display:flex;align-items:center;justify-content:center;">
-      <div style="text-align:center;">
-        <div style="font-size:80px;margin-bottom:16px;">💬</div>
-        <p style="color:var(--muted);font-size:15px;">Chat-Button unten rechts<br/>ausprobieren! →</p>
-        <div style="margin-top:24px;padding:16px 24px;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:12px;">
-          <p style="color:var(--gold);font-size:13px;margin-bottom:8px;">Zum Beispiel fragen:</p>
-          <p style="color:var(--text);font-size:13px;line-height:1.8;">"Wann habt ihr geöffnet?"<br/>"Ich möchte einen Tisch reservieren"<br/>"Gibt es vegetarische Gerichte?"</p>
-        </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">Schritt 01</div>
+        <h3>Daten eintragen</h3>
+        <p>Öffnungszeiten, Speisekarte und Reservierungsregeln in unserem einfachen Dashboard. Dauert ca. 15 Minuten.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">Schritt 02</div>
+        <h3>Code einfügen</h3>
+        <p>Eine einzige Zeile Code in deine Website einfügen. So einfach wie ein Cookie-Banner.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">Schritt 03</div>
+        <h3>Loslegen</h3>
+        <p>Dein neuer Mitarbeiter ist sofort live und beantwortet deine ersten Gäste-Fragen – automatisch, rund um die Uhr.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- FEATURES -->
-<section class="reveal">
-  <div class="section-label">Features</div>
-  <h2>Alles was Ihr<br/><em>Restaurant braucht</em></h2>
-  <div class="features-grid">
-    <div class="feature-card"><div class="feature-icon">🕐</div><div class="feature-title">24/7 verfügbar</div><div class="feature-desc">Ihr Bot schläft nie. Auch um 23 Uhr nimmt er Reservierungen entgegen und beantwortet Fragen.</div></div>
-    <div class="feature-card"><div class="feature-icon">📅</div><div class="feature-title">Reservierungssystem</div><div class="feature-desc">Nimmt Tischreservierungen entgegen, speichert sie in Google Sheets und sendet automatische Bestätigungen.</div></div>
-    <div class="feature-card"><div class="feature-icon">📧</div><div class="feature-title">Automatische E-Mails</div><div class="feature-desc">Gast bekommt Bestätigung, Restaurant bekommt Benachrichtigung – alles vollautomatisch.</div></div>
-    <div class="feature-card"><div class="feature-icon">🌍</div><div class="feature-title">Mehrsprachig</div><div class="feature-desc">Erkennt automatisch ob der Gast Deutsch oder Englisch schreibt und antwortet entsprechend.</div></div>
-    <div class="feature-card"><div class="feature-icon">📋</div><div class="feature-title">Ihre Speisekarte</div><div class="feature-desc">Erklärt Zutaten, nennt Allergene und gibt Empfehlungen passend zum Gast.</div></div>
-    <div class="feature-card"><div class="feature-icon">⚡</div><div class="feature-title">Einfache Integration</div><div class="feature-desc">Ein Code-Schnipsel – fertig. Funktioniert mit jeder Website, egal ob WordPress, Wix oder custom.</div></div>
+<section id="features">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Was er kann</span>
+      <h2>Alles, was deine Gäste<br>fragen würden.</h2>
+      <p>Vom ersten "Habt ihr offen?" bis zur fertigen Reservierung – GastroBot übernimmt es.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon"><svg><use href="#i-calendar"/></svg></div>
+        <h3>Reservierungen</h3>
+        <p>Nimmt Tischreservierungen entgegen und schickt dir eine E-Mail. Du hast immer den Überblick.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><svg><use href="#i-utensils"/></svg></div>
+        <h3>Speisekarte erklären</h3>
+        <p>Beantwortet Fragen zu Zutaten, Allergien und vegetarischen Optionen – ohne dass du ans Telefon musst.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><svg><use href="#i-clock"/></svg></div>
+        <h3>Öffnungszeiten</h3>
+        <p>Nie wieder dieselbe Frage 50 Mal am Tag selbst beantworten.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><svg><use href="#i-globe"/></svg></div>
+        <h3>Mehrsprachig</h3>
+        <p>Spricht Deutsch, Englisch, Französisch, Italienisch und mehr – perfekt für Touristen.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><svg><use href="#i-chart"/></svg></div>
+        <h3>Statistiken</h3>
+        <p>Sieh, was deine Gäste fragen, was sie wollen und wann sie kommen wollen.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon"><svg><use href="#i-bolt"/></svg></div>
+        <h3>Antwort in 2 Sekunden</h3>
+        <p>Keine Wartezeit für deine Gäste. Schneller als jede E-Mail und jeder Anruf.</p>
+      </div>
+    </div>
   </div>
 </section>
 
 <!-- PRICING -->
-<section id="pricing" class="reveal">
-  <div class="section-label">Preise</div>
-  <h2>Transparent.<br/><em>Erschwinglich.</em></h2>
-  <p class="section-desc">Keine versteckten Kosten. Kündbar jeden Monat.</p>
-  <div class="pricing-grid">
-    <div class="price-card">
-      <div class="price-name">Starter</div>
-      <div class="price-amount">79<span>€</span></div>
-      <div class="price-period">pro Monat · zzgl. MwSt.</div>
-      <ul class="price-features">
-        <li>KI-Chatbot für Ihre Website</li>
-        <li>Fragen & Öffnungszeiten</li>
-        <li>Reservierungen entgegennehmen</li>
-        <li>Bis zu 500 Nachrichten/Monat</li>
-        <li>Deutsch & Englisch</li>
-      </ul>
-      <button class="price-btn">Kostenlos testen</button>
+<section id="pricing">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Ein fairer Preis</span>
+      <h2>Keine Tarife.<br>Keine Verwirrung.</h2>
+      <p>Alle Funktionen, ein Preis. Erst einen Monat kostenlos ausprobieren – dann entscheiden.</p>
     </div>
-    <div class="price-card featured">
-      <div class="price-badge">Beliebteste Wahl</div>
-      <div class="price-name">Pro</div>
-      <div class="price-amount">149<span>€</span></div>
-      <div class="price-period">pro Monat · zzgl. MwSt.</div>
-      <ul class="price-features">
-        <li>Alles aus Starter</li>
-        <li>Automatische E-Mail Bestätigungen</li>
-        <li>Google Sheets Dashboard</li>
-        <li>Bis zu 2.000 Nachrichten/Monat</li>
-        <li>Eigenes Design & Logo</li>
-        <li>Prioritäts-Support</li>
-      </ul>
-      <button class="price-btn featured-btn">Kostenlos testen</button>
-    </div>
-    <div class="price-card">
-      <div class="price-name">Premium</div>
-      <div class="price-amount">249<span>€</span></div>
-      <div class="price-period">pro Monat · zzgl. MwSt.</div>
-      <ul class="price-features">
-        <li>Alles aus Pro</li>
-        <li>Unbegrenzte Nachrichten</li>
-        <li>Mehrere Standorte</li>
-        <li>WhatsApp Benachrichtigungen</li>
-        <li>Persönlicher Onboarding-Call</li>
-      </ul>
-      <button class="price-btn">Kostenlos testen</button>
+
+    <div class="pricing-wrap">
+      <div class="price-card">
+        <div class="price-banner">Erster Monat gratis</div>
+        <div class="price-inner">
+          <div class="price-name">GastroBot</div>
+          <div class="price-tagline">Alles dabei. Keine versteckten Kosten.</div>
+          <div class="price-figure">
+            <span class="price-currency">€</span>
+            <span class="price-num">25</span>
+            <span class="price-period">/ Monat</span>
+          </div>
+          <div class="price-trial">Nach dem Gratis-Monat – monatlich kündbar.</div>
+
+          <ul class="feature-list">
+            <li><svg><use href="#i-check"/></svg> Unbegrenzte Gespräche</li>
+            <li><svg><use href="#i-check"/></svg> Reservierungssystem inklusive</li>
+            <li><svg><use href="#i-check"/></svg> E-Mail-Benachrichtigungen</li>
+            <li><svg><use href="#i-check"/></svg> Mehrsprachiger Bot</li>
+            <li><svg><use href="#i-check"/></svg> Statistik-Dashboard</li>
+            <li><svg><use href="#i-check"/></svg> Persönlicher Support</li>
+          </ul>
+
+          <a href="mailto:hallo@gastrobot.de?subject=Gratis-Monat%20starten" class="btn btn-primary">Einen Monat gratis testen <span class="arrow">→</span></a>
+          <p class="price-note">Keine Kreditkarte nötig. Keine automatische Verlängerung ohne deine Zustimmung.</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
 <!-- FAQ -->
-<section class="reveal">
-  <div class="section-label">Häufige Fragen</div>
-  <h2>Alles <em>geklärt</em></h2>
-  <div class="faq-list">
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Brauche ich technische Kenntnisse?<span class="faq-icon">+</span></div><div class="faq-a">Nein. Das Einrichten dauert 2 Minuten. Sie füllen ein Formular aus, wir generieren einen Code-Schnipsel den Sie oder Ihr Webdesigner auf der Website einfügt.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Wie kommen Reservierungen beim Restaurant an?<span class="faq-icon">+</span></div><div class="faq-a">Sofort per E-Mail-Benachrichtigung und in einer Google Sheets Tabelle die Sie jederzeit öffnen können – wie ein digitaler Reservierungsblock.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Kann ich den Bot selbst anpassen?<span class="faq-icon">+</span></div><div class="faq-a">Ja. Über unser Dashboard können Sie Speisekarte, Öffnungszeiten, Farben und den Namen des Bots jederzeit selbst ändern. Änderungen sind sofort live.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Wie lange dauert der kostenlose Test?<span class="faq-icon">+</span></div><div class="faq-a">14 Tage, komplett kostenlos, keine Kreditkarte nötig. Danach entscheiden Sie ob Sie weitermachen möchten.</div></div>
-    <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Funktioniert das auch mit meiner bestehenden Website?<span class="faq-icon">+</span></div><div class="faq-a">Ja. GastroBot funktioniert mit jeder Website – WordPress, Wix, Squarespace, oder einer eigenen. Sie brauchen nur ein kleines JavaScript-Snippet einzufügen.</div></div>
+<section id="faq">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow">Häufige Fragen</span>
+      <h2>Was du wissen solltest.</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>Brauche ich technische Kenntnisse?</summary>
+        <p>Nein. Du musst nur eine Zeile Code in deine Website einfügen – das ist genauso einfach wie ein Cookie-Banner. Falls du keinen Webdesigner hast, helfen wir dir beim Einrichten.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Auf welchen Websites funktioniert das?</summary>
+        <p>Auf jeder Website. Egal ob WordPress, Wix, Squarespace, Jimdo oder eine selbst gebaute Seite – GastroBot lässt sich überall integrieren.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Kann ich monatlich kündigen?</summary>
+        <p>Ja, jederzeit zum Monatsende kündbar. Keine Mindestlaufzeit, kein Kleingedrucktes.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Was passiert nach dem Gratis-Monat?</summary>
+        <p>Du entscheidest selbst. Erst wenn du aktiv zustimmst, geht es kostenpflichtig weiter. Du läufst nicht aus Versehen in ein Abo.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Was passiert, wenn der Bot eine Frage nicht beantworten kann?</summary>
+        <p>Der Bot erkennt seine Grenzen und leitet den Gast dann an dich weiter – per E-Mail oder Telefonnummer. So geht kein Gast verloren.</p>
+      </details>
+      <details class="faq-item">
+        <summary>Wie sicher sind die Daten meiner Gäste?</summary>
+        <p>DSGVO-konform. Wir speichern keine personenbezogenen Daten länger als nötig, und alle Server stehen in der EU.</p>
+      </details>
+    </div>
   </div>
 </section>
 
-<!-- CTA -->
-<div class="cta-section reveal">
-  <div class="cta-glow"></div>
-  <div style="position:relative;z-index:1;">
-    <div class="section-label">Jetzt starten</div>
-    <h2>Bereit Ihren<br/><em>Bot zu aktivieren?</em></h2>
-    <p>14 Tage kostenlos. Keine Kreditkarte. Kündbar jederzeit.</p>
-    <a href="#pricing" class="btn-primary">Kostenlos testen →</a>
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <div class="container">
+    <div class="final-cta-card">
+      <h2>Bereit für einen Mitarbeiter,<br>der nie krank wird?</h2>
+      <p>Probier GastroBot einen Monat kostenlos. Wenn er nichts für dich ist, einfach wieder gehen.</p>
+      <a href="#pricing" class="btn btn-cream btn-big">Jetzt einen Monat gratis testen <span class="arrow">→</span></a>
+    </div>
   </div>
-</div>
+</section>
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">GastroBot</div>
-  <div class="footer-text">© 2025 GastroBot · Made with ❤️ for Restaurants</div>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <svg class="logo-mark"><use href="#gb-logo"/></svg>
+          GastroBot
+        </div>
+        <p>Der KI-Mitarbeiter für die Gastronomie. Gemacht in Deutschland, für deutsche Restaurants.</p>
+      </div>
+      <div>
+        <h4>Produkt</h4>
+        <ul>
+          <li><a href="#features">Funktionen</a></li>
+          <li><a href="#pricing">Preise</a></li>
+          <li><a href="#how">So funktioniert's</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Hilfe</h4>
+        <ul>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="mailto:hallo@gastrobot.de">Kontakt</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Rechtliches</h4>
+        <ul>
+          <li><a href="#">Impressum</a></li>
+          <li><a href="#">Datenschutz</a></li>
+          <li><a href="#">AGB</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 GastroBot. Alle Rechte vorbehalten.</div>
+      <div>Made in Germany</div>
+    </div>
+  </div>
 </footer>
 
-<!-- LIVE CHAT WIDGET -->
-<button class="chat-bubble-btn" onclick="toggleChat()" title="Chat öffnen">💬</button>
+<!-- CHAT WIDGET -->
+<button class="chat-bubble" id="chatBubble" aria-label="Chat öffnen">
+  <svg><use href="#i-chat"/></svg>
+</button>
 
-<div class="chat-window hidden" id="chatWindow">
-  <div class="chat-header">
-    <div class="chat-avatar">🍝</div>
+<div class="chat-window" id="chatWindow">
+  <div class="chat-window-header">
+    <div class="chat-avatar">
+      <svg><use href="#gb-logo"/></svg>
+    </div>
     <div>
-      <div class="chat-title">La Bella Cucina</div>
-      <div class="chat-status">Online – wir helfen gerne</div>
+      <div class="chat-title">GastroBot Demo</div>
+      <div class="chat-status">Online</div>
     </div>
-    <button class="close-btn" onclick="toggleChat()">×</button>
+    <button class="chat-close" id="chatClose" aria-label="Chat schließen">
+      <svg><use href="#i-close"/></svg>
+    </button>
   </div>
-  <div class="chat-messages" id="chatMessages">
-    <div class="msg-row">
-      <div class="msg-av">🍝</div>
-      <div class="bubble bot">Benvenuto! 👋 Willkommen bei La Bella Cucina. Wie kann ich Ihnen helfen? / Welcome! How can I help you today?</div>
+  <div class="chat-body" id="chatBody">
+    <div class="chat-msg bot">
+      Hi, ich bin GastroBot – die Demo. Frag mich gerne etwas wie "Wann habt ihr offen?" oder "Habt ihr vegetarische Optionen?"
     </div>
-  </div>
-  <div class="suggestions" id="suggestions">
-    <button class="sug-btn" onclick="sendSug(this)">Öffnungszeiten?</button>
-    <button class="sug-btn" onclick="sendSug(this)">Reservierung</button>
-    <button class="sug-btn" onclick="sendSug(this)">Vegetarisch?</button>
-    <button class="sug-btn" onclick="sendSug(this)">What's on the menu?</button>
   </div>
   <div class="chat-input-area">
-    <textarea class="chat-input" id="chatInput" rows="1" placeholder="Nachricht schreiben..." onkeydown="handleKey(event)" oninput="updateSend()"></textarea>
-    <button class="send-btn inactive" id="sendBtn" onclick="sendMsg()">➤</button>
+    <input type="text" class="chat-input" id="chatInput" placeholder="Nachricht schreiben..." autocomplete="off" />
+    <button class="chat-send" id="chatSend" aria-label="Senden">
+      <svg><use href="#i-send"/></svg>
+    </button>
   </div>
 </div>
 
 <script>
-  // ⚠️ Deinen Anthropic API Key hier eintragen
-  const SERVER_URL = "https://gastrobot-backend.onrender.com/chat";
+  // ─── BACKEND URL ───
+  const BACKEND_URL = "https://gastrobot-backend.onrender.com/chat";
 
-  let history = [];
-  let chatOpen = false;
+  const bubble = document.getElementById('chatBubble');
+  const chatWindow = document.getElementById('chatWindow');
+  const chatClose = document.getElementById('chatClose');
+  const chatBody = document.getElementById('chatBody');
+  const chatInput = document.getElementById('chatInput');
+  const chatSend = document.getElementById('chatSend');
 
-  function toggleChat() {
-    chatOpen = !chatOpen;
-    document.getElementById('chatWindow').classList.toggle('hidden', !chatOpen);
+  function toggleChat(open) {
+    if (open) {
+      chatWindow.classList.add('open');
+      bubble.classList.add('hidden');
+      setTimeout(() => chatInput.focus(), 250);
+    } else {
+      chatWindow.classList.remove('open');
+      bubble.classList.remove('hidden');
+    }
   }
 
-  function updateSend() {
-    const val = document.getElementById('chatInput').value.trim();
-    const btn = document.getElementById('sendBtn');
-    btn.className = val ? 'send-btn active' : 'send-btn inactive';
+  bubble.addEventListener('click', () => toggleChat(true));
+  chatClose.addEventListener('click', () => toggleChat(false));
+
+  function addMessage(text, who) {
+    const msg = document.createElement('div');
+    msg.className = 'chat-msg ' + who;
+    msg.textContent = text;
+    chatBody.appendChild(msg);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return msg;
   }
 
-  function handleKey(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); }
+  function addTyping() {
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-msg bot';
+    wrap.innerHTML = '<div class="chat-typing"><span></span><span></span><span></span></div>';
+    chatBody.appendChild(wrap);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return wrap;
   }
 
-  function sendSug(btn) {
-    const sugs = document.getElementById('suggestions');
-    if (sugs) sugs.remove();
-    document.getElementById('chatInput').value = btn.textContent;
-    sendMsg();
-  }
-
-  async function sendMsg() {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim();
+  async function sendMessage() {
+    const text = chatInput.value.trim();
     if (!text) return;
-    input.value = '';
-    updateSend();
-
-    addMsg('user', text);
-    history.push({ role: 'user', content: text });
-
-    const typingId = showTyping();
-
+    addMessage(text, 'user');
+    chatInput.value = '';
+    chatSend.disabled = true;
+    const typing = addTyping();
     try {
-      const res = await fetch(SERVER_URL, {
+      const res = await fetch(BACKEND_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: history })
+        body: JSON.stringify({ message: text })
       });
       const data = await res.json();
-      const reply = data.reply || 'Fehler';
-      removeTyping(typingId);
-      addMsg('bot', reply);
-      history.push({ role: 'assistant', content: reply });
-    } catch {
-      removeTyping(typingId);
-      addMsg('bot', 'Entschuldigung, ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
+      typing.remove();
+      addMessage(data.reply || data.response || 'Keine Antwort erhalten.', 'bot');
+    } catch (err) {
+      typing.remove();
+      addMessage('Gerade gibt es ein technisches Problem. Versuch es gleich noch einmal.', 'bot');
+    } finally {
+      chatSend.disabled = false;
+      chatInput.focus();
     }
   }
 
-  function addMsg(role, text) {
-    const msgs = document.getElementById('chatMessages');
-    const row = document.createElement('div');
-    row.className = `msg-row ${role}`;
-    if (role === 'bot') {
-      row.innerHTML = `<div class="msg-av">🍝</div><div class="bubble bot">${text}</div>`;
-    } else {
-      row.innerHTML = `<div class="bubble user">${text}</div>`;
-    }
-    msgs.appendChild(row);
-    msgs.scrollTop = msgs.scrollHeight;
-  }
-
-  function showTyping() {
-    const msgs = document.getElementById('chatMessages');
-    const id = 'typing-' + Date.now();
-    const row = document.createElement('div');
-    row.className = 'msg-row';
-    row.id = id;
-    row.innerHTML = `<div class="msg-av">🍝</div><div class="bubble bot"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
-    msgs.appendChild(row);
-    msgs.scrollTop = msgs.scrollHeight;
-    return id;
-  }
-
-  function removeTyping(id) {
-    document.getElementById(id)?.remove();
-  }
-
-  function toggleFaq(el) {
-    const item = el.parentElement;
-    const isOpen = item.classList.contains('open');
-    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
-    if (!isOpen) item.classList.add('open');
-  }
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-  }, { threshold: 0.1 });
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  chatSend.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
 </script>
+
 </body>
 </html>
