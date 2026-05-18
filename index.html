@@ -813,9 +813,11 @@
     }
     .chat-body .chat-msg { animation: none; opacity: 1; max-width: 86%; }
     .chat-input-area {
-      padding: 14px;
+      padding: 10px 14px 14px;
       border-top: 1px solid var(--line);
       background: var(--bg-2);
+    }
+    .chat-input-row {
       display: flex;
       gap: 8px;
     }
@@ -833,6 +835,7 @@
     }
     .chat-input::placeholder { color: var(--muted); }
     .chat-input:focus { border-color: var(--coral); }
+    .chat-input.too-long { border-color: #ef4444; }
     .chat-send {
       width: 42px; height: 42px;
       background: var(--coral);
@@ -842,10 +845,20 @@
       cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.2s;
+      flex-shrink: 0;
     }
     .chat-send:hover { background: var(--coral-dk); }
     .chat-send:disabled { background: var(--muted); cursor: not-allowed; }
     .chat-send svg { width: 18px; height: 18px; }
+    .chat-char-counter {
+      font-size: 11px;
+      color: var(--muted);
+      text-align: right;
+      margin-top: 5px;
+      transition: color 0.2s;
+    }
+    .chat-char-counter.warn { color: var(--sun); }
+    .chat-char-counter.over  { color: #ef4444; }
   </style>
 </head>
 <body>
@@ -1202,23 +1215,28 @@
     </div>
   </div>
   <div class="chat-input-area">
-    <input type="text" class="chat-input" id="chatInput" placeholder="Nachricht schreiben..." autocomplete="off" />
-    <button class="chat-send" id="chatSend" aria-label="Senden">
-      <svg><use href="#i-send"/></svg>
-    </button>
+    <div class="chat-input-row">
+      <input type="text" class="chat-input" id="chatInput" placeholder="Nachricht schreiben..." autocomplete="off" maxlength="500" />
+      <button class="chat-send" id="chatSend" aria-label="Senden">
+        <svg><use href="#i-send"/></svg>
+      </button>
+    </div>
+    <div class="chat-char-counter" id="charCounter">0 / 500</div>
   </div>
 </div>
 
 <script>
   // ─── BACKEND URL ───
   const BACKEND_URL = "https://gastrobot-backend.onrender.com/chat";
+  const MAX_CHARS = 500;
 
-  const bubble = document.getElementById('chatBubble');
-  const chatWindow = document.getElementById('chatWindow');
-  const chatClose = document.getElementById('chatClose');
-  const chatBody = document.getElementById('chatBody');
-  const chatInput = document.getElementById('chatInput');
-  const chatSend = document.getElementById('chatSend');
+  const bubble      = document.getElementById('chatBubble');
+  const chatWindow  = document.getElementById('chatWindow');
+  const chatClose   = document.getElementById('chatClose');
+  const chatBody    = document.getElementById('chatBody');
+  const chatInput   = document.getElementById('chatInput');
+  const chatSend    = document.getElementById('chatSend');
+  const charCounter = document.getElementById('charCounter');
 
   function toggleChat(open) {
     if (open) {
@@ -1233,6 +1251,20 @@
 
   bubble.addEventListener('click', () => toggleChat(true));
   chatClose.addEventListener('click', () => toggleChat(false));
+
+  // Zeichenzähler aktualisieren
+  chatInput.addEventListener('input', () => {
+    const len = chatInput.value.length;
+    charCounter.textContent = `${len} / ${MAX_CHARS}`;
+    charCounter.className = 'chat-char-counter';
+    chatInput.classList.remove('too-long');
+    if (len >= MAX_CHARS) {
+      charCounter.classList.add('over');
+      chatInput.classList.add('too-long');
+    } else if (len >= MAX_CHARS * 0.8) {
+      charCounter.classList.add('warn');
+    }
+  });
 
   function addMessage(text, who) {
     const msg = document.createElement('div');
@@ -1255,10 +1287,16 @@
   async function sendMessage() {
     const text = chatInput.value.trim();
     if (!text) return;
+    if (text.length > MAX_CHARS) return;
+
     addMessage(text, 'user');
     chatInput.value = '';
+    charCounter.textContent = `0 / ${MAX_CHARS}`;
+    charCounter.className = 'chat-char-counter';
+    chatInput.classList.remove('too-long');
     chatSend.disabled = true;
     const typing = addTyping();
+
     try {
       const res = await fetch(BACKEND_URL, {
         method: 'POST',
@@ -1267,10 +1305,17 @@
           messages: [{ role: 'user', content: text }]
         })
       });
-      const data = await res.json();
+
       typing.remove();
 
-      // Extract reply from various possible response shapes
+      if (res.status === 429) {
+        const data = await res.json();
+        addMessage(data.reply || 'Bitte warte einen Moment, bevor du die nächste Nachricht sendest.', 'bot');
+        return;
+      }
+
+      const data = await res.json();
+
       let reply = null;
       if (data.content && Array.isArray(data.content) && data.content[0]?.text) {
         reply = data.content[0].text;
